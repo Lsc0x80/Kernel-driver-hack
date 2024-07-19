@@ -3,7 +3,7 @@ THIS MODULE IS FOR ANDROID! <br>
 should work with kernels 4.14.83 — 5.4.61<br>
 tested with kernel 4.14.345
 ### Features
-- [x] Getting memory maps ( bypass /proc/[pid]/maps detection )
+- [x] Getting memory maps ( bypass /proc/[pid]/maps reading detection )
 - [x] Check for module presence
 - [ ] Memory reading
 - [ ] Memory writing
