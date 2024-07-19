@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
 	// Reading /proc/self/maps from userspace
 	printf("Memory mapping from /proc/self/maps:\n");
-	int maps_founded_count;
+	int maps_founded_count = 0;
 	FILE *fp;
 	char buf[1024];
 	fp = fopen("/proc/self/maps", "r");
