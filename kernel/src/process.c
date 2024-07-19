@@ -11,10 +11,21 @@
 
 extern int founded_vmas_count;
 
-struct map_entry *get_module_info(pid_t pid, char *name)
+struct mm_struct *get_mm_from_pid(pid_t pid)
 {
 	struct pid *pid_struct;
 	struct task_struct *task;
+	struct mm_struct *mm;
+
+	pid_struct = find_get_pid(pid);					if (!pid_struct) return NULL;
+	task = get_pid_task(pid_struct, PIDTYPE_PID);	if (!task) return NULL;
+	mm = get_task_mm(task);							if (!mm) return NULL;
+
+	return mm;
+}
+
+struct map_entry *get_module_info(pid_t pid, char *name)
+{
 	struct mm_struct *mm;
 	struct vm_area_struct *vma;
 	struct map_entry *maps;
@@ -26,10 +37,7 @@ struct map_entry *get_module_info(pid_t pid, char *name)
 		return NULL;
 	}
 
-	pid_struct = find_get_pid(pid);					if (!pid_struct) return NULL;
-	task = get_pid_task(pid_struct, PIDTYPE_PID);	if (!task) return NULL;
-	mm = get_task_mm(task);							if (!mm) return NULL;
-	mmput(mm);
+	mm = get_mm_from_pid(pid);	if (!mm) return NULL;
 
 	for (vma = mm->mmap; vma; vma = vma->vm_next)
 	{
@@ -54,20 +62,16 @@ struct map_entry *get_module_info(pid_t pid, char *name)
 		}
 	}
 	founded_vmas_count = i;
+	mmput(mm);
 	return maps;
 }
 
 int get_has_module(pid_t pid, char *name)
 {
-	struct pid *pid_struct;
-	struct task_struct *task;
 	struct mm_struct *mm;
 	struct vm_area_struct *vma;
 
-	pid_struct = find_get_pid(pid);					if (!pid_struct) return -1;
-	task = get_pid_task(pid_struct, PIDTYPE_PID);	if (!task) return -1;
-	mm = get_task_mm(task);							if (!mm) return -1;
-	mmput(mm);
+	mm = get_mm_from_pid(pid);	if (!mm) return -1;
 
 	for (vma = mm->mmap; vma; vma = vma->vm_next)
 	{
@@ -78,9 +82,11 @@ int get_has_module(pid_t pid, char *name)
 			path_nm = file_path(vma->vm_file, buf, PATH_CHARS_MAX - 1);
 			if (strstr(path_nm, name))
 			{
+				mmput(mm);
 				return 1;
 			}
 		}
 	}
+	mmput(mm);
 	return 0;
 }

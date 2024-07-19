@@ -7,6 +7,8 @@ struct map_entry {
 };
 #pragma pack(pop)
 
+struct mm_struct *get_mm_from_pid(pid_t pid);
+
 /*
  * Get array of founded modules.
  *
