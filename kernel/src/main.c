@@ -11,9 +11,10 @@
 int founded_vmas_count;
 
 enum OPS {
-	GET_MAPS	= 6001,
-	READ_MEM	= 6002,
-	WRITE_MEM	= 6003,
+	GET_MAPS			= 6001,
+	GET_MAPS_PRESENCE	= 6002,
+	READ_MEM			= 6003,
+	WRITE_MEM			= 6004,
 };
 
 struct maps_ {
@@ -24,6 +25,13 @@ struct maps_ {
 	// input
 	pid_t pid;
 	char *name_to_find;
+};
+
+struct module_presence {
+	pid_t pid;
+	char *module_name;
+
+	int presence;
 };
 
 static int dispatch_open(struct inode *node, struct file *file)
@@ -47,7 +55,7 @@ static ssize_t dispatch_read(struct file *filePointer, char __user *buffer,
 		pr_info("[KernelHack]: copy_to_user failed\n");
 		ret = 0;
 	} else {
-		pr_info("[KernelHack]: chardev read %s\n", filePointer->f_path.dentry->d_name.name); 
+		pr_info("[KernelHack]: chardev read %s\n", filePointer->f_path.dentry->d_name.name);
 		*offset += len;
 	}
 
@@ -59,6 +67,7 @@ static long dispatch_ioctl(struct file *file, unsigned int cmd, unsigned long ar
 	static char name[0x100] = {0};
 	struct maps_ maps;
 	struct map_entry *founded_vmas;
+	struct module_presence module_p;
 
 	switch (cmd)
 	{
@@ -87,6 +96,14 @@ static long dispatch_ioctl(struct file *file, unsigned int cmd, unsigned long ar
 			pr_info("[KernelHack]: Getting maps done");
 			break;
 		}
+		case GET_MAPS_PRESENCE:
+			if (copy_from_user(&module_p, (void __user *)arg, sizeof(module_p)) != 0 ||
+				copy_from_user(name, (void __user *)module_p.module_name, sizeof(name)-1) != 0)
+				return -1;
+			module_p.presence = get_has_module(module_p.pid, name);
+			if (copy_to_user((void __user *)arg, &module_p, sizeof(module_p)) != 0)
+				return -1;
+			break;
 		default:
 			break;
 	}
