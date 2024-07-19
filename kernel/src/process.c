@@ -56,3 +56,32 @@ struct map_entry *get_module_info(pid_t pid, char *name)
 	founded_vmas_count = i;
 	return maps;
 }
+
+int get_has_module(pid_t pid, char *name)
+{
+	struct pid *pid_struct;
+	struct task_struct *task;
+	struct mm_struct *mm;
+	struct vm_area_struct *vma;
+	struct map_entry *maps;
+
+	pid_struct = find_get_pid(pid);					if (!pid_struct) return -1;
+	task = get_pid_task(pid_struct, PIDTYPE_PID);	if (!task) return -1;
+	mm = get_task_mm(task);							if (!mm) return -1;
+	mmput(mm);
+
+	for (vma = mm->mmap; vma; vma = vma->vm_next)
+	{
+		char buf[PATH_CHARS_MAX];
+		char *path_nm = "";
+		if (vma->vm_file)
+		{
+			path_nm = file_path(vma->vm_file, buf, PATH_CHARS_MAX - 1);
+			if (strstr(path_nm, name))
+			{
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
