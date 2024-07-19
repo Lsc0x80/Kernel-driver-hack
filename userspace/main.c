@@ -11,9 +11,10 @@
 #define DEVICE_NAME "/dev/rAnd0m"
 
 enum OPS {
-	GET_MAPS    = 6001,
-	READ_MEM    = 6002,
-	WRITE_MEM   = 6003,
+	GET_MAPS    		= 6001,
+	GET_MAPS_PRESENCE	= 6002,
+	READ_MEM    		= 6003,
+	WRITE_MEM   		= 6004,
 };
 
 #pragma pack(push, 1)
@@ -32,6 +33,13 @@ struct maps_ {
 	// pass to kernel
 	pid_t pid;
 	char *name_to_find;
+};
+
+struct module_presence {
+	pid_t pid;
+	char *module_name;
+
+	int presence;
 };
 
 int main(int argc, char *argv[]) {
@@ -90,5 +98,14 @@ int main(int argc, char *argv[]) {
 	}
 	printf("Founded %d regions\n", maps.founded_count);
 	free(maps.founded);
+
+	// Check for module presence
+	struct module_presence mod_p;
+	mod_p.pid = getpid();
+	mod_p.module_name = argv[1];
+
+	ioctl(fd, GET_MAPS_PRESENCE, &mod_p);
+	printf("\nPresence: %d\n", mod_p.presence);
+
 	return 0;
 }
