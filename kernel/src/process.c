@@ -63,7 +63,6 @@ int get_has_module(pid_t pid, char *name)
 	struct task_struct *task;
 	struct mm_struct *mm;
 	struct vm_area_struct *vma;
-	struct map_entry *maps;
 
 	pid_struct = find_get_pid(pid);					if (!pid_struct) return -1;
 	task = get_pid_task(pid_struct, PIDTYPE_PID);	if (!task) return -1;
